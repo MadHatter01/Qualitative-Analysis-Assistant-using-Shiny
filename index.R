@@ -18,6 +18,7 @@ ui <- fluidPage(
   tags$head(tags$script(js)),
   tags$script(
     'let store = [];
+    let store2=[];
                $(document).on("keypress", function (e) {
 
        if(e.which=="99"){
@@ -28,13 +29,17 @@ Shiny.setInputValue("store", store);
 
     alert(store.length);
        }
+       else if(e.which=="98"){
+     
+text = window.getSelection().toString();
+store2.push(text);
+console.log(store2);
+Shiny.setInputValue("bcode", store2);
+       }
     });'
   ),
-  tags$a(hreg = "#", onclick = "ST()", 'Click me'),
+ # tags$a(hreg = "#", onclick = "ST()", 'Click me'),
   theme = shinytheme('yeti'),
-  
-  
-  "Press any key",
   navbarPage(
     "My Page",
     tabPanel(
@@ -73,7 +78,10 @@ Shiny.setInputValue("store", store);
              Perseus in Greek mythology.'),
 
            h3('Text Parsed'),
-               verbatimTextOutput("store")),
+           h4("C Codes"),
+               verbatimTextOutput("store"),
+           h4("B Codes"),
+           verbatimTextOutput("bcode")),
     tabPanel('Frequency', 'Blank for now')
   )
 )
@@ -96,6 +104,9 @@ server <- function(input, output, session) {
    paste(input$store, collapse = '\n')
   })
   
+  output$bcode<-renderText({
+    paste(input$bcode, collapse = '\n')
+  })
   output$summary_stat <- renderPrint({
     # paste(as.numeric(input$num1)+as.numeric(input$num2))
     paste(str(data()))
