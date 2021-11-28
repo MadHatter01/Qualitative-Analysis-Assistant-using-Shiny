@@ -2,36 +2,70 @@ library(shiny)
 library(shinythemes)
 library(DT)
 
+js <- HTML(
+  "ST=function getSelectedText() {
 
-ui<- fluidPage(theme= shinytheme('yeti'),
+    var text = '';
+    if (typeof window.getSelection != 'undefined') {
+        text = window.getSelection().toString();
+    } else if (typeof document.selection != 'undefined' && document.selection.type == 'Text') {
+        text = document.selection.createRange().text;
+    }
+
+}"
+)
+ui <- fluidPage(
+  tags$head(tags$script(js)),
+  tags$script(
+    '
+               $(document).on("keypress", function (e) {
+
+       if(e.which=="99"){
+
+        text = window.getSelection().toString();
+
+    alert(text)
+       }
+    });'
+  ),
+  tags$a(hreg = "#", onclick = "ST()", 'Click me'),
+  theme = shinytheme('yeti'),
+  
+  
+  "Press any key",
+  navbarPage(
+    "My Page",
+    tabPanel(
+      "Navbar",
+      sidebarPanel(
+        h3('Enter numbers'),
+        textInput("num1", "Enter num1:", "23"),
+        textInput("num2", "Enter num2:", "34"),
+        
+        fileInput(
+          inputId = "filedata",
+          label = "Upload data. Choose CSV file",
+          accept = c(".csv")
+        )
+      ),
+      mainPanel(
+        h1('Hello world'),
+        p('Data Summary'),
+        verbatimTextOutput("summary_stat"),
+        h3("Datatypes available"),
+        actionButton("convert", "Convert character to factor"),
+        tableOutput("datatype.table"),
+        actionButton("text_data", "Show only text"),
+        h3("Display contents of CSV file"),
+        dataTableOutput("textdata")
+        
+      )
+    ),
+    tabPanel('Categories',
              
-               
-               "Press any key",
-               navbarPage("My Page",
-                  tabPanel("Navbar",
-                  sidebarPanel(
-                     h3('Enter numbers'),
-                     textInput("num1", "Enter num1:","23"),
-                     textInput("num2", "Enter num2:","34"),
-          
-                     fileInput(inputId = "filedata",
-                               label = "Upload data. Choose CSV file",
-                               accept = c(".csv"))
-                    ),
-                 mainPanel(
-                   h1('Hello world'),
-                   p('This is just another text!'),
-                   verbatimTextOutput("addnum"),
-                   h3("Datatypes available"),
-                   tableOutput("datatype.table"),
-                   h3("Display contents of CSV file"),
-                   dataTableOutput("textdata")
-                   
-                 )
-                ),
-                tabPanel('Categories','Blank for now'),
-                tabPanel('Frequency','Blank for now')
-               )
+             p('sample text hello world okay')),
+    tabPanel('Frequency', 'Blank for now')
+  )
 )
 jscode <- "
 shinyjs.init = function() {
@@ -39,26 +73,43 @@ shinyjs.init = function() {
 }"
 
 server <- function(input, output, session) {
-  
   data <- reactive({
     inFile <- input$filedata
-    if (is.null(inFile)) return(NULL)
+    if (is.null(inFile))
+      return(NULL)
     read.csv(inFile$datapath)
-    df.textfile<- as.data.frame(read.csv(inFile$datapath))
+    df.textfile <- as.data.frame(read.csv(inFile$datapath))
   })
- 
   
-  output$addnum <- renderText({
-    paste(as.numeric(input$num1)+as.numeric(input$num2))
-    #
+  
+  output$summary_stat <- renderPrint({
+    # paste(as.numeric(input$num1)+as.numeric(input$num2))
+    paste(str(data()))
     #paste(data.type.file)
   })
-  output$datatype.table<-renderTable({
-    data.type.file<- as.list(sapply(data(), 'class'))
-    data.type.file})
-  output$textdata<-renderDataTable(
+  output$datatype.table <- renderTable({
+    data.type.file <- lapply(data(), 'class')
+    input$convert
+    if (input$convert == 0) {
+      data.type.file <- lapply(data(), 'class')
+      return(data.type.file)
+    }
+    else{
+      data.core = data()
+      data.core[sapply(data.core, is.character)] <-
+        lapply(data.core[sapply(data.core, is.character)], as.factor)
+      data.type.file <- lapply(data.core, 'class')
+      data.type.file
+    }
+  })
+  output$textdata <- renderDataTable(if (input$text_data != 0) {
+    data.core.val = data()
+    #combine function with the factor application
+    return(data.core.val[sapply(data.core.val, is.character)])
+  }
+  else{
     data()
-  )
+  })
 }
 
 shinyApp(ui, server)
