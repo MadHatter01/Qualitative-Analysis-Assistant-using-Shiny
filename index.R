@@ -1,6 +1,8 @@
 library(shiny)
 library(shinythemes)
 library(DT)
+library(devtools)
+
 
 js <- HTML(
   "ST=function getSelectedText() {
@@ -59,6 +61,7 @@ Shiny.setInputValue("bcode", store2);
         h1('Hello world'),
         p('Data Summary'),
         verbatimTextOutput("summary_stat"),
+        verbatimTextOutput("test_print"),
         h3("Datatypes available"),
         actionButton("convert", "Convert character to factor"),
         
@@ -133,8 +136,15 @@ server <- function(input, output, session) {
     return(data.core.val[sapply(data.core.val, is.character)])
   }
   else{
-    data()
+    test.data = data()
+    test.data[sapply(test.data, is.character)]
   })
+  
+  output$test_print <- renderPrint({
+    test.data = data()
+    lapply(test.data[sapply(test.data, is.character)], summary)
+  })
+  
 }
 
 shinyApp(ui, server)
