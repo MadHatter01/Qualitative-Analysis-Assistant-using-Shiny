@@ -2,6 +2,16 @@ library(shiny)
 library(shinythemes)
 library(DT)
 library(devtools)
+library(tm)
+library(wordcloud)
+library(dplyr)
+library(RColorBrewer)
+library(tidytext)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(wordcloud2)
+
 
 
 js <- HTML(
@@ -85,7 +95,10 @@ Shiny.setInputValue("bcode", store2);
                verbatimTextOutput("store"),
            h4("B Codes"),
            verbatimTextOutput("bcode")),
-    tabPanel('Frequency', 'Blank for now')
+    tabPanel('Frequency', 
+             plotOutput('wordc'),
+             h3('Word Cloud'),
+             wordcloud2Output("cloud"))
   )
 )
 jscode <- "
@@ -103,6 +116,40 @@ server <- function(input, output, session) {
     df.textfile <- as.data.frame(read.csv(inFile$datapath))
   })
   
+  output$wordc <- renderPlot({
+  #  data.cloud <- read.csv('APPLE_iPhone_SE.csv', header=TRUE)
+    data.cloud<-data()
+    data.cloud <- data.cloud %>%
+      mutate(line = row_number())
+    text.data <- tibble(text=data.cloud$Reviews)
+    text.data$text=str_replace_all(text.data$text, "[^[:alnum:]]", " ")
+    text.data$text=iconv(text.data$text, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+    text.data%>%
+      unnest_tokens(word, text)%>%
+      anti_join(stop_words) %>%
+      count(word, sort=TRUE) %>%
+      filter(n>450)%>%
+      ggplot(aes(n, word))+
+      geom_col()
+    
+  })
+  
+  output$cloud<-renderWordcloud2({
+    data.cloud<-data()
+    data.cloud <- data.cloud %>%
+      mutate(line = row_number())
+    text.data <- tibble(text=data.cloud$Reviews)
+    text.data$text=str_replace_all(text.data$text, "[^[:alnum:]]", " ")
+    text.data$text=iconv(text.data$text, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+    x<-text.data%>%
+      unnest_tokens(word, text)%>%
+      anti_join(stop_words) %>%
+      
+      count(word, sort=TRUE) %>%
+      filter(n>350)
+    
+    wordcloud2(x)
+  })
   output$store<-renderText({
    paste(input$store, collapse = '\n')
   })
