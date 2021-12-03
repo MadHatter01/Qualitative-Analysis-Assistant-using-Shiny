@@ -1,4 +1,4 @@
-# Qualitative data assistant built using Shiny
+# Qualitative Data Assistant built using Shiny
 
 Project under construction
 
