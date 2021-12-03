@@ -1,2 +1,6 @@
-# Qual_shiny
+# Qualitative data assistant built using Shiny
+
+Project under construction
+
+
  
