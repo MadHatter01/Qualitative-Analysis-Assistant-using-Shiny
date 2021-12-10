@@ -11,8 +11,10 @@ library(ggplot2)
 library(tidyr)
 library(stringr)
 library(wordcloud2)
+library(shinyjs)
+library(V8)
 
-
+jsc<- "shinyjs.assigncode = function(){alert('yes');}"
 
 js <- HTML(
   "ST=function getSelectedText() {
@@ -26,11 +28,17 @@ js <- HTML(
 
 }"
 )
+
 ui <- fluidPage(
+  shinyjs::useShinyjs(),
+  
   tags$head(tags$script(js)),
   tags$script(
     'let store = [];
     let store2=[];
+    
+Shiny.assigncode = function(){alert("yes");}
+
                $(document).on("keypress", function (e) {
 
        if(e.which=="99"){
@@ -83,6 +91,12 @@ Shiny.setInputValue("bcode", store2);
       )
     ),
     tabPanel('Categories',
+             sidebarPanel(
+
+               textInput("code", "Enter code", "Test"),
+               textInput("shortcut", "Enter shortcut", "C"),
+               actionButton("btn", "click")
+             ), mainPanel(
              h3('Sample Text'),
              p('The Andromeda Galaxy (IPA: /ænˈdrɒmɪdə/), also known as Messier 31, M31, or NGC 224 and originally the Andromeda Nebula
              (see below), is a barred spiral galaxy approximately 2.5 million light-years (770 kiloparsecs) from Earth and the nearest large galaxy to the Milky Way.[6] The galaxy\'s
@@ -94,7 +108,7 @@ Shiny.setInputValue("bcode", store2);
            h4("C Codes"),
                verbatimTextOutput("store"),
            h4("B Codes"),
-           verbatimTextOutput("bcode")),
+           verbatimTextOutput("bcode"))),
     tabPanel('Frequency', 
              plotOutput('wordc'),
              h3('Word Cloud'),
@@ -107,6 +121,9 @@ shinyjs.init = function() {
 }"
 
 server <- function(input, output, session) {
+ observeEvent(input$btn,{
+runjs("alert('yes')")
+ })
   counter<-list()
   data <- reactive({
     inFile <- input$filedata
