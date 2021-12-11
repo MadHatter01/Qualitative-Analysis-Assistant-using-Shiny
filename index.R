@@ -40,8 +40,10 @@ ui <- fluidPage(
 Shiny.assigncode = function(){alert("yes");}
 
                $(document).on("keypress", function (e) {
+alert(document.getElementById("score"));
 
        if(e.which=="99"){
+
 
         text = window.getSelection().toString();
 store.push(text);
@@ -97,6 +99,7 @@ Shiny.setInputValue("bcode", store2);
                textInput("shortcut", "Enter shortcut", "C"),
                actionButton("btn", "click")
              ), mainPanel(
+               verbatimTextOutput("scores"),
              h3('Sample Text'),
              p('The Andromeda Galaxy (IPA: /ænˈdrɒmɪdə/), also known as Messier 31, M31, or NGC 224 and originally the Andromeda Nebula
              (see below), is a barred spiral galaxy approximately 2.5 million light-years (770 kiloparsecs) from Earth and the nearest large galaxy to the Milky Way.[6] The galaxy\'s
@@ -119,11 +122,21 @@ jscode <- "
 shinyjs.init = function() {
   $(document).keypress(function(e) { alert('Key pressed: ' + e.which); });
 }"
-
+mylist <- reactiveValues()
 server <- function(input, output, session) {
+
  observeEvent(input$btn,{
+   mylist=append(mylist, input$code)
+   paste('input$code')
+  vas<- paste('yes', mylist)
 runjs("alert('yes')")
+
+   
  })
+ output$scores <- renderText({
+   paste(typeof(mylist), length(mylist))
+ }
+ )
   counter<-list()
   data <- reactive({
     inFile <- input$filedata
